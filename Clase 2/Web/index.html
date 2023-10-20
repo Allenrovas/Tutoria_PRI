@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initiall-scale=1.0">
+        <title>Álbumes</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    
+    </head>
+    <style>
+        h1 {
+            text-align: center;
+        }
+        button{
+            text-align: center;
+        }
+    </style>
+    <body>
+        <h1>Álbumes</h1>
+        <form id="albumForm">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="titulo" name="titulo" required>
+                <label for="titulo">Titulo</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="artista" name="artista" required>
+                <label for="artista">Artista</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="anio" name="anio" required>
+                <label for="anio">Año</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar</button>
+        </form>
+
+        <table id="albumTable" class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Título</th>
+                    <th scope="col">Artista</th>
+                    <th scope="col">Año</th>
+                </tr>
+            </thead>
+        </table>
+
+        <form id="deleteForm">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="delete" name="delete" required>
+                <label for="delete">Id a Eliminar</label>
+            </div>
+            <button type="submit" class="btn btn-danger">Eliminar</button>
+        </form>
+        <script>
+            const table = document.querySelector('#albumTable')
+            const AlbumForm = document.getElementById('albumForm');
+            const deleteForm = document.getElementById('deleteForm');
+
+            function fillTable(){
+
+                while(table.rows.length >1){
+                    table.deleteRow(1);
+                }
+                fetch('http://localhost:4000/getAlbums')
+                .then(response => response.json())
+                .then(data =>{
+                    console.log(data)
+                    data.forEach(album =>{
+                        console.log(album)
+                        const row = table.insertRow();
+                        row.insertCell(0).textContent = album.id;
+                        row.insertCell(1).textContent = album.titulo;
+                        row.insertCell(2).textContent = album.artista;
+                        row.insertCell(3).textContent = album.anio; 
+                    });
+                });
+            }
+
+            fillTable();
+
+            AlbumForm.addEventListener('submit',function(e){
+                e.preventDefault();
+                const titulo = document.getElementById('titulo').value;
+                const anio = document.getElementById('anio').value;
+                const artista = document.getElementById('artista').value;
+                
+                fetch('http://localhost:4000/postAlbum',{
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({titulo,artista,anio})
+                })
+                .then(response =>{
+                    fillTable();
+                    document.getElementById('titulo').value = '';
+                    document.getElementById('anio').value = '';
+                    document.getElementById('artista').value = '';
+                });
+            });
+
+            deleteForm.addEventListener('submit',function(e){
+                e.preventDefault();
+                const delte = document.getElementById('delete').value;
+                fetch(`http://localhost:4000/deleteAlbum/${delte}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.status === 200) {
+                        // Actualiza la tabla después de eliminar el álbum
+                        fillTable();
+                    }
+                });
+            });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    </body>
+</html>
